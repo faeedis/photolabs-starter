@@ -1,23 +1,23 @@
 import React from 'react';
 
-import '../styles/TopNavigationBar.scss'
+//Components
 import TopicList from './TopicList';
-import FavBadge from './FavBadge';
-import FavIcon from './FavIcon';
+
+//Styles
+import '../styles/TopNavigationBar.scss';
 
 const TopNavigation = (props) => {
+  const { topics, favPhotos, onTopicSelect } = props;
   return (
     <div className="top-nav-bar">
-      <span className="top-nav-bar--logo">PhotoLabs</span>
-      <TopicList 
-        topics={props.topics} 
-        fetchTopicPhotos={props.fetchTopicPhotos}
+      <span className="top-nav-bar__logo">PhotoLabs</span>
+      <TopicList
+        topics={topics}
+        favPhotos={favPhotos}
+        onTopicSelect={onTopicSelect}
       />
-      <div className="photo-list--fav-icon-svg">
-        <FavBadge isFavPhotoExist= {props.likes.length > 0 ? 1 : 0} /> 
-      </div>
     </div>
-  )
-}
+  );
+};
 
 export default TopNavigation;

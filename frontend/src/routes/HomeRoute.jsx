@@ -1,25 +1,37 @@
 import React from 'react';
 
-
-import '../styles/HomeRoute.scss';
+//Components
 import TopNavigation from '../components/TopNavigationBar';
 import PhotoList from '../components/PhotoList';
 
-const HomeRoute = (props) =>  {
+//Styles
+import '../styles/HomeRoute.scss';
+
+const HomeRoute = (props) => {
+  const {
+    topics,
+    photos,
+    onTopicSelect,
+    onFavPhoto,
+    onPhotoClick,
+    favPhotos,
+  } = props;
+
   return (
-    <div className="home-route" >
-      <TopNavigation 
-        topics={props.topics} 
-        likes={ props.likes } 
-        fetchTopicPhotos={props.fetchTopicPhotos}
+    <div className="home-route">
+      <TopNavigation
+        topics={topics}
+        favPhotos={favPhotos}
+        onTopicSelect={onTopicSelect}
       />
-      <PhotoList 
-        photos={props.photos}
-        likes={ props.likes } 
-        favoritePhoto={props.favoritePhoto}
-        openModal={props.openModal} 
+      <PhotoList
+        photos={photos}
+        favPhotos={favPhotos}
+        onFavPhoto={onFavPhoto}
+        onPhotoClick={onPhotoClick}
       />
     </div>
   );
-}
+};
+
 export default HomeRoute;

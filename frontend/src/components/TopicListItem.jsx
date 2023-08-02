@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-import '../styles/TopicListItem.scss'
+import '../styles/TopicListItem.scss';
 
 const TopicListItem = (props) => {
+  const onClick = () => {
+    props.onTopicSelect(props.id);
+  };
+
+  const style = { textDecoration: props.isSelect ? 'overline' : 'none' };
   return (
-    <div className="topic-list--item" onClick={() => props.fetchTopicPhotos(props.id)}>
-      <span>{props.title}</span>
+    <div onClick={onClick} style={style} className="topic-list__item">
+      <span>{props.label}</span>
     </div>
-  )
-}
+  );
+};
 
-
-export default TopicListItem
+TopicListItem.defaultProps = {
+  id: '1',
+  slug: 'topic-1',
+  label: 'Nature',
+};
+export default TopicListItem;

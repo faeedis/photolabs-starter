@@ -1,48 +1,50 @@
 import React from 'react';
 
+//Components
 import HomeRoute from './routes/HomeRoute';
 import PhotoDetailsModal from './routes/PhotoDetailsModal';
-import useApplicationData from './hooks/useApplicationData'; 
+
+//Hooks
+import useApplicationData from './hooks/useApplicationData';
+
+//Styles
 import './App.scss';
 
-
-// Note: Rendering a single component to build components in isolation
+//App component
 const App = () => {
   const {
     photos,
     topics,
-    likes,
-    openModal,
-    closeModal,
-    detailPhotoId,
-    fetchTopicPhotos,
-    favoritePhoto,
-    showPhoto
-  } = useApplicationData(); 
+    favPhotos,
+    onTopicSelect,
+    onPhotoSelect,
+    onPhotoClick,
+    onClosePhotoDetailsModal,
+    handleFavPhoto,
+  } = useApplicationData();
 
   return (
     <div className="App">
-      <HomeRoute         
+      <HomeRoute
+        topics={topics}
         photos={photos}
-        topics={topics} 
-        likes={likes} 
-        fetchTopicPhotos={fetchTopicPhotos}
-        favoritePhoto={favoritePhoto}
-        openModal={openModal} 
+        favPhotos={favPhotos}
+        onFavPhoto={handleFavPhoto}
+        onPhotoClick={onPhotoClick}
+        onTopicSelect={onTopicSelect}
       />
-      {
-        showPhoto && detailPhotoId && <PhotoDetailsModal 
-                                        photos={photos}
-                                        likes={likes}
-                                        openModal={openModal} 
-                                        closeModal={closeModal}
-                                        favoritePhoto={favoritePhoto}
-                                        detailPhotoId={detailPhotoId}                         
-                                      /> 
-      }
-    </div>
-  )
-  
-}
 
-export default App
+      {onPhotoSelect && (
+        <PhotoDetailsModal
+          photo={onPhotoSelect}
+          favPhotos={favPhotos}
+          onFavPhoto={handleFavPhoto}
+          onPhotoClick={onPhotoClick}
+          onCloseModal={onClosePhotoDetailsModal}
+        />
+      )}
+    </div>
+  );
+};
+
+export default App;

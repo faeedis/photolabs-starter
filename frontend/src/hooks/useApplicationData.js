@@ -1,155 +1,120 @@
-import { useEffect,useReducer } from "react";
+import { useEffect, useReducer, useState } from 'react';
 import axios from 'axios';
 
-export const ACTION = {
-  ALL_PHOTOS: "ALL_PHOTOS",
-  ALL_TOPICS: "ALL_TOPICS",
+const ACTIONS = {
   FAV_PHOTO_ADDED: 'FAV_PHOTO_ADDED',
   FAV_PHOTO_REMOVED: 'FAV_PHOTO_REMOVED',
+  SET_PHOTO_DATA: 'SET_PHOTO_DATA',
+  SET_TOPIC_DATA: 'SET_TOPIC_DATA',
   SELECT_PHOTO: 'SELECT_PHOTO',
-  CLOSE_SELECT_PHOTO: 'CLOSE_SELECT_PHOTO',
-  GET_PHOTOS_BY_TOPICS: 'GET_PHOTOS_BY_TOPICS',
-}
+  DISPLAY_PHOTO_DETAILS: 'DISPLAY_PHOTO_DETAILS',
+};
 
-export default function useApplicationData() {
-  const defaultState = {
-    photos: [],
-    topics: [],
-    likes: [],
-    showPhoto: false, 
-    detailPhotoId: null
+const API_URL = 'http://localhost:8001/api';
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case ACTIONS.FAV_PHOTO_ADDED:
+      return {
+        ...state,
+        favPhotos: {
+          ...state.favPhotos,
+          [action.payload.id]: action.payload,
+        },
+      };
+    case ACTIONS.FAV_PHOTO_REMOVED:
+      const { [action.payload.id]: _, ...remainingFavPhotos } =
+        state.favPhotos;
+      return {
+        ...state,
+        favPhotos: remainingFavPhotos,
+      };
+    case ACTIONS.SET_PHOTO_DATA:
+      return {
+        ...state,
+        photoData: action.payload,
+      };
+    case ACTIONS.SET_TOPIC_DATA:
+      return {
+        ...state,
+        topicData: action.payload,
+      };
+    case ACTIONS.SELECT_PHOTO:
+      return {
+        ...state,
+        onPhotoSelect: action.payload,
+      };
+    case ACTIONS.DISPLAY_PHOTO_DETAILS:
+      return {
+        ...state,
+        displayPhotoDetails: action.payload,
+      };
+    default:
+      throw new Error(
+        `Tried to reduce with unsupported action type: ${action.type}`
+      );
   }
+};
 
-  function reducer(state, action) {
-    switch (action.type) {
-      case "ALL_PHOTOS":
-        console.log('all the photos', action.payload);
-        return {
-          ...state,
-          photos: action.payload.photos
-        };
-    
-      case "ALL_TOPICS":
-        console.log('all the topics', action.payload);
-        return {
-          ...state,
-          topics: action.payload.topics
-        };
-      case "FAV_PHOTO_ADDED":
-        return {
-          ...state, 
-          likes: [...state.likes, action.payload.id]
-        };
-      case "FAV_PHOTO_REMOVED":
-        return {
-          ...state, 
-          likes: state.likes.filter(id => id !== action.payload.id)
-        };
-      case "SELECT_PHOTO":
-        return {
-          ...state,
-          showPhoto: action.payload.isOpen,
-          detailPhotoId: action.payload.detailPhotoId
-        };
-      case "CLOSE_SELECT_PHOTO":
-        return {
-          ...state,
-          showPhoto: action.payload.isOpen,
-          detailPhotoId: action.payload.detailPhotoId
-        };
-      case "GET_PHOTOS_BY_TOPICS":
-        console.log('GET_PHOTOS_BY_TOPICS', action.payload);
-        return {
-          ...state,
-          photos: action.payload
-        };
-      default:
-        throw new Error(
-          `Unsupported Action: ${action.type}`
-        );
-    }
-  } 
-  
-  const [state, dispatch] = useReducer(reducer, defaultState);
+const useApplicationData = () => {
+  const initialState = {
+    onPhotoSelect: null,
+    favPhotos: {},
+    photoData: null,
+    topicData: null,
+    displayPhotoDetails: false,
+  };
 
-  // add and remove favorites of photos
-  const favoritePhoto = (photoId) => {
-    if (state.likes.includes(photoId)) {
-      dispatch({
-        type: "FAV_PHOTO_REMOVED",
-        payload: { id: photoId }
-      })
-    } else {
-      dispatch({
-        type: "FAV_PHOTO_ADDED",
-        payload: { id: photoId}
-      })
-    }
-  }
+  const [state, dispatch] = useReducer(reducer, initialState);
 
-  // open the Detail Photo Page
-  const openModal = (photoId) => {
+  const onPhotoClick = (photo) => {
+    dispatch({ type: ACTIONS.SELECT_PHOTO, payload: photo });
+  };
+
+  const onClosePhotoDetailsModal = () => {
+    dispatch({ type: ACTIONS.SELECT_PHOTO, payload: null });
+  };
+
+  const handleFavPhoto = (photo) => {
     dispatch({
-      type: "SELECT_PHOTO",
-      payload: {isOpen: true, detailPhotoId: photoId }
-    })
-  }
-  
-  // close a Detail Photo Page 
-  const closeModal = () => {
-    dispatch({
-      type: "CLOSE_SELECT_PHOTO",
-      payload: {isOpen: false, detailPhotoId: null}
-    })
-  }
-
-  // retrive the photos based on topic Id
-  const fetchTopicPhotos = (topicId) => {
-    axios.get(`/api/topics/photos/${topicId}`)
-      .then(res => {
-      dispatch({
-        type: "GET_PHOTOS_BY_TOPICS",
-        payload: res.data
-      })
-    })
-    .catch(e => {
-      console.log("DB Error while fetching photos based on topic:", e);
+      type: state.favPhotos[photo.id]
+        ? ACTIONS.FAV_PHOTO_REMOVED
+        : ACTIONS.FAV_PHOTO_ADDED,
+      payload: photo,
     });
-  }
+  };
+
+  const [photos, setPhotos] = useState([]);
+  const [topics, setTopics] = useState([]);
 
   useEffect(() => {
-    axios.get('/api/photos')
-      .then(res => {
-        dispatch({ 
-          type: "ALL_PHOTOS", 
-          payload: {photos:res.data}
-        });
-      })
-      .catch(e => {
-        console.log("DB Error while fetching photos:", e);
-      });
-
-    axios.get('/api/topics')
-      .then(res => {
-        dispatch({ 
-          type: "ALL_TOPICS", 
-          payload: {topics:res.data}
-        });
-      })
-      .catch(e => {
-        console.log("DB Error while fetching topics:", e);
-      });
+    axios.get(`${API_URL}/photos`).then((res) => {
+      setPhotos(res.data);
+    });
   }, []);
 
-  return { 
-    photos: state.photos,
-    topics: state.topics,
-    likes: state.likes,
-    openModal,
-    closeModal,
-    detailPhotoId: state.detailPhotoId,
-    fetchTopicPhotos,
-    favoritePhoto,
-    showPhoto: state.showPhoto
+  useEffect(() => {
+    axios.get(`${API_URL}/topics`).then((res) => {
+      setTopics(res.data);
+    });
+  }, []);
+
+  const onTopicSelect = (id) => {
+    axios.get(`${API_URL}/topics/photos/${id}`).then((res) => {
+      setPhotos(res.data);
+    });
   };
-}
+
+  return {
+    onPhotoSelect: state.onPhotoSelect,
+    favPhotos: state.favPhotos,
+    onPhotoClick,
+    onClosePhotoDetailsModal,
+    handleFavPhoto,
+    photos,
+    topics,
+    onTopicSelect,
+  };
+};
+
+export default useApplicationData;
